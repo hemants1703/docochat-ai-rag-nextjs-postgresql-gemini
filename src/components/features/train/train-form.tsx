@@ -4,10 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trainDocument } from "@/lib/actions/train/document-actions";
 import { CircuitBoardIcon, Loader2Icon, XIcon } from "lucide-react";
-import { useActionState, useState, useRef } from "react";
+import { useActionState, useState, useRef, useEffect } from "react";
 import PreviewSelectedFile from "./preview-selected-file";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { QuotaExceeded, UserDetails } from "@/app/train/page";
+import { createClient } from "../../../../supabase/client";
+import { redirect } from "next/navigation";
 
 export interface TrainFormState {
   file: File | null;
@@ -16,7 +19,11 @@ export interface TrainFormState {
   message?: string | undefined;
 }
 
-export default function TrainForm() {
+interface TrainFormProps {
+  userDetails: UserDetails;
+}
+
+export default function TrainForm(props: TrainFormProps) {
   // React Hooks
   const [formState, formAction, isResponsePending] = useActionState<
     TrainFormState,
@@ -29,6 +36,65 @@ export default function TrainForm() {
   });
   const [fileSelected, setFileSelected] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(
+    props.userDetails
+  );
+
+  // Initialize user details
+  useEffect(() => {
+    const userDetails = localStorage.getItem("user-docochat-ai");
+    if (!userDetails) {
+      localStorage.setItem(
+        "user-docochat-ai",
+        JSON.stringify(props.userDetails)
+      );
+      setUserDetails(props.userDetails);
+    } else {
+      setUserDetails(JSON.parse(userDetails));
+    }
+  }, []);
+
+  const updateUserDetails = async () => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", props.userDetails.id);
+
+    if (error) {
+      console.error("Error while updating user details", error);
+      toast.error("Error while updating user details", {
+        description: error.message,
+      });
+      return;
+    }
+
+    setUserDetails(data[0]);
+
+    localStorage.setItem("user-docochat-ai", JSON.stringify(data[0]));
+
+    redirect("/chat");
+  };
+
+  // Update user details
+  useEffect(() => {
+    if (formState.success) {
+      updateUserDetails();
+    }
+  }, [formState.message]);
+
+  if (!userDetails) {
+    return (
+      <div className="flex items-center justify-center gap-2">
+        <Loader2Icon className="h-4 w-4 animate-spin" />
+        <p className="text-sm text-gray-500">Loading user details...</p>
+      </div>
+    );
+  }
+
+  if (userDetails.files_used >= userDetails.files_available) {
+    return <QuotaExceeded />;
+  }
 
   // Handle File to detect support
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,12 +125,6 @@ export default function TrainForm() {
       if (!confirmFileSupport.ok) {
         throw new Error(fileSupportResponse.message);
       }
-
-      // if (localStorage.getItem("user-docochat-ai")) {
-      //   const user = JSON.parse(localStorage.getItem("user-docochat-ai") as string);
-
-      //   if (user)
-      // }
 
       toast.success("Success", {
         description: fileSupportResponse.message,
@@ -105,6 +165,7 @@ export default function TrainForm() {
             if (fileInputRef.current) {
               fileInputRef.current.value = "";
               setFileSelected(null);
+              formState.error = undefined;
             }
           }}
         >
@@ -112,8 +173,18 @@ export default function TrainForm() {
         </Button>
       </div>
 
+      <Input
+        type="hidden"
+        name="userDetails"
+        value={JSON.stringify(userDetails)}
+      />
+
       {/* Preview Uploaded File */}
-      {fileSelected && <PreviewSelectedFile file={fileSelected} />}
+      {fileSelected ? (
+        <PreviewSelectedFile file={fileSelected} />
+      ) : (
+        <p className="text-sm text-gray-500">No file selected</p>
+      )}
 
       {/* Error and Success Messages */}
       {formState.error && (

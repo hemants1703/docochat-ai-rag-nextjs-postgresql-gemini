@@ -13,4 +13,5 @@ export const supportedFileTypes: SupportedFileType[] = [
   { ext: "md", mime: "text/markdown" },
   { ext: "csv", mime: "text/csv" },
   { ext: "rtf", mime: "application/rtf" },
+  { ext: "rtf", mime: "text/rtf" },
 ];

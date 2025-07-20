@@ -4,12 +4,16 @@ import {
   SupportedFileType,
   supportedFileTypes,
 } from "@/lib/supportedFileTypes";
-import { extractTextFromTXTOrMD } from "@/lib/api-services/train/text-extraction-services";
+import {
+  extractTextFromRTF,
+  extractTextFromTXTOrMD,
+} from "@/lib/api-services/train/text-extraction-services";
 import { chunkText } from "@/lib/api-services/train/text-chunking-services";
 import OpenAI from "openai";
 import { embedChunkedText } from "@/lib/api-services/train/text-embedding-service";
+import { UserDetails } from "@/app/train/page";
 
-export default async function POST(
+export async function POST(
   request: NextRequest
 ): Promise<NextResponse<{ message: string; error?: Error }>> {
   const formData: FormData = await request.formData();
@@ -32,8 +36,33 @@ export default async function POST(
       }
     );
   }
+  const userDetails: UserDetails = JSON.parse(
+    formData.get("userDetails") as string
+  ) as UserDetails;
 
   const supabase = await createClient();
+
+  // Check if the user has reached the maximum number of files available
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userDetails.id);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (data && data[0].files_available === 0) {
+    return NextResponse.json(
+      {
+        message: "You have reached the maximum number of files available",
+      },
+      {
+        status: 400,
+        statusText: "Bad Request",
+      }
+    );
+  }
 
   switch (fileType.ext) {
     case "txt":
@@ -43,18 +72,25 @@ export default async function POST(
         const textChunks: string[] = await chunkText(extractedText, 100, 20); // Chunk the extracted text into smaller chunks
         const textEmbeddings: OpenAI.Embeddings.CreateEmbeddingResponse =
           await embedChunkedText(textChunks, "text-embedding-3-small"); // Embed the text chunks using OpenAI's text-embedding-3-small model
-        const { data, error } = await supabase.from("vector_store").insert({
-          user_id: "test",
-          content: extractedText,
-          vectors: textEmbeddings.data.map(
-            (embedding: OpenAI.Embeddings.Embedding) => embedding.embedding
-          ),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+
+        // Insert one row per text chunk with its corresponding vector
+        const insertPromises = textEmbeddings.data.map((embedding, index) => {
+          return supabase.from("vector_store").insert({
+            user_id: "test",
+            content: textChunks[index],
+            vectors: embedding.embedding,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
         });
 
-        if (error) {
-          throw new Error(error.message);
+        const results = await Promise.all(insertPromises);
+
+        // Check for any errors in the insertions
+        for (const result of results) {
+          if (result.error) {
+            throw new Error(result.error.message);
+          }
         }
 
         console.log({
@@ -65,7 +101,7 @@ export default async function POST(
           vectors: textEmbeddings.data.map(
             (embedding: OpenAI.Embeddings.Embedding) => embedding.embedding
           ),
-          data,
+          data: results,
         });
 
         return NextResponse.json(
@@ -78,17 +114,86 @@ export default async function POST(
           }
         );
       } catch (error) {
-        console.error("Error while training file", error);
+        console.error("Error while training TXT/MD file", error);
         return NextResponse.json(
           {
             message:
               error instanceof Error
                 ? error.message
-                : "Error while training file",
+                : "Error while training TXT/MD file",
           },
           {
             status: 500,
-            statusText: "Internal Server Error",
+            statusText: "Internal Server Error: TXT/MD file",
+          }
+        );
+      }
+      break;
+    case "rtf":
+      try {
+        console.log("extracting text from RTF file");
+        const extractedText: string = await extractTextFromRTF(fileContent); // Extract text from RTF file
+        const textChunks: string[] = await chunkText(extractedText, 100, 20); // Chunk the extracted text into smaller chunks
+        const textEmbeddings: OpenAI.Embeddings.CreateEmbeddingResponse =
+          await embedChunkedText(textChunks, "text-embedding-3-small"); // Embed the text chunks using OpenAI's text-embedding-3-small model
+
+        // Insert one row per text chunk with its corresponding vector
+        const insertPromises = textEmbeddings.data.map((embedding, index) => {
+          return supabase.from("vector_store").insert({
+            user_id: userDetails.id,
+            file_name: fileContent.name,
+            file_type: fileType.ext,
+            file_size: fileContent.size,
+            file_content: extractedText,
+            content: textChunks[index],
+            vectors: embedding.embedding,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        });
+
+        const results = await Promise.all(insertPromises);
+
+        // Check for any errors in the insertions
+        for (const result of results) {
+          if (result.error) {
+            throw new Error(result.error.message);
+          }
+        }
+
+        const { data, error } = await supabase
+          .from("users")
+          .update({
+            files_used: 1,
+            files_available: 0,
+          })
+          .eq("id", userDetails.id);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        return NextResponse.json(
+          {
+            message: "File trained successfully",
+          },
+          {
+            status: 200,
+            statusText: "OK",
+          }
+        );
+      } catch (error) {
+        console.error("Error while training RTF file", error);
+        return NextResponse.json(
+          {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Error while training RTF file",
+          },
+          {
+            status: 500,
+            statusText: "Internal Server Error: RTF file",
           }
         );
       }

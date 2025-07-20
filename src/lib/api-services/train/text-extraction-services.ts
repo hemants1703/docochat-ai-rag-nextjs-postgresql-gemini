@@ -1,3 +1,5 @@
+import rtf2text from "rtf2text";
+
 export const extractTextFromTXTOrMD = async (file: File): Promise<string> => {
   return new Promise(
     (resolve: (text: string) => void, reject: (error: Error) => void) => {
@@ -17,6 +19,22 @@ export const extractTextFromTXTOrMD = async (file: File): Promise<string> => {
       };
 
       reader.readAsText(file);
+    }
+  );
+};
+
+export const extractTextFromRTF = async (file: File): Promise<string> => {
+  const rtfContent = await file.text();
+
+  return new Promise(
+    (resolve: (text: string) => void, reject: (error: Error) => void) => {
+      rtf2text.string(rtfContent, (err: Error | null, result: string) => {
+        if (err) {
+          reject(new Error(`Failed to parse RTF file: ${err.message}`));
+        } else {
+          resolve(result.trim());
+        }
+      });
     }
   );
 };

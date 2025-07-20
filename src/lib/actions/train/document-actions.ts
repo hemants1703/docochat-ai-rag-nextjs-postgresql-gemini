@@ -1,8 +1,6 @@
 "use server";
 
 import type { TrainFormState } from "@/components/features/train/train-form";
-import { redirect } from "next/navigation";
-import { createClient } from "../../../../supabase/server";
 
 export async function trainDocument(
   initialState: TrainFormState,
@@ -15,7 +13,6 @@ export async function trainDocument(
       ...initialState,
       error: new Error("Please upload a file to continue"),
       success: false,
-      message: "Please upload a file to continue",
     };
   }
 
@@ -24,40 +21,46 @@ export async function trainDocument(
       ...initialState,
       error: new Error("Please upload a file to continue"),
       success: false,
-      message: "Please upload a file to continue",
     };
   }
 
   try {
+    const userDetails: string = formData.get("userDetails") as string;
+
+    if (!userDetails) {
+      throw new Error("User details not found");
+    }
+
+    formData.append("userDetails", userDetails);
+
     const trainFile = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/document/train`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
         body: formData,
       }
     );
 
-    const fileTrainingResponse = await trainFile.json();
-
     if (!trainFile.ok) {
-      throw new Error(fileTrainingResponse.message);
+      throw new Error((await trainFile.json()).message);
     }
+
+    const fileTrainingResponse = await trainFile.json();
+    console.log("fileTrainingResponse", fileTrainingResponse);
 
     return {
       ...initialState,
       success: true,
-      message: "File trained successfully",
+      message: fileTrainingResponse.message,
     };
   } catch (error) {
-    console.error("Error while training file", error);
+    // console.error("Error while training file", error);
     return {
       ...initialState,
-      error: new Error("Error while training file"),
       success: false,
-      message: "Error while training file",
+      error: new Error(
+        error instanceof Error ? error.message : "Error while training file"
+      ),
     };
   }
 
