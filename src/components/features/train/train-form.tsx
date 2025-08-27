@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { QuotaExceeded, UserDetails } from "@/app/train/page";
 import { createClient } from "../../../../supabase/client";
 import { redirect } from "next/navigation";
+import { generateRandomUUID } from "@/lib/actions/train/uuid-generator";
 
 export interface TrainFormState {
   file: File | null;
@@ -19,11 +20,7 @@ export interface TrainFormState {
   message?: string | undefined;
 }
 
-interface TrainFormProps {
-  userDetails: UserDetails;
-}
-
-export default function TrainForm(props: TrainFormProps) {
+export default function TrainForm() {
   // React Hooks
   const [formState, formAction, isResponsePending] = useActionState<
     TrainFormState,
@@ -36,19 +33,49 @@ export default function TrainForm(props: TrainFormProps) {
   });
   const [fileSelected, setFileSelected] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [userDetails, setUserDetails] = useState<UserDetails | null>(
-    props.userDetails
-  );
+  const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+
+  const createUserInSupabase = async () => {
+    const newUserDetails: UserDetails = {
+      id: generateRandomUUID(),
+      username: "test",
+      credits_available: 10,
+      credits_used: 0,
+      files_available: 1,
+      files_used: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    try {
+      const createUserInSupabase = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/user/create-user`,
+        {
+          method: "POST",
+          body: JSON.stringify(newUserDetails),
+        }
+      );
+
+      const createUserInSupabaseResponse = await createUserInSupabase.json();
+
+      if (!createUserInSupabase.ok) {
+        throw new Error(createUserInSupabaseResponse.statusText);
+      }
+
+      localStorage.setItem("user-docochat-ai", JSON.stringify(newUserDetails));
+      setUserDetails(newUserDetails);
+    } catch (error) {
+      console.error("Error while creating user in Supabase", error);
+    }
+  };
 
   // Initialize user details
   useEffect(() => {
     const userDetails = localStorage.getItem("user-docochat-ai");
+
+    // If user details are not found, then only create a new user
     if (!userDetails) {
-      localStorage.setItem(
-        "user-docochat-ai",
-        JSON.stringify(props.userDetails)
-      );
-      setUserDetails(props.userDetails);
+      createUserInSupabase();
     } else {
       setUserDetails(JSON.parse(userDetails));
     }
@@ -59,7 +86,7 @@ export default function TrainForm(props: TrainFormProps) {
     const { data, error } = await supabase
       .from("users")
       .select("*")
-      .eq("id", props.userDetails.id);
+      .eq("id", userDetails?.id);
 
     if (error) {
       console.error("Error while updating user details", error);
@@ -109,10 +136,10 @@ export default function TrainForm(props: TrainFormProps) {
 
     // Confirm file support
     try {
-      const formData = new FormData();
+      const formData: FormData = new FormData();
       formData.append("file", selectedFile as File);
 
-      const confirmFileSupport = await fetch(
+      const confirmFileSupport: Response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/document/confirm-support`,
         {
           method: "POST",
@@ -120,11 +147,11 @@ export default function TrainForm(props: TrainFormProps) {
         }
       );
 
-      const fileSupportResponse = await confirmFileSupport.json();
-
       if (!confirmFileSupport.ok) {
-        throw new Error(fileSupportResponse.message);
+        throw new Error((await confirmFileSupport.json()).message);
       }
+
+      const fileSupportResponse = await confirmFileSupport.json();
 
       toast.success("Success", {
         description: fileSupportResponse.message,
@@ -180,7 +207,7 @@ export default function TrainForm(props: TrainFormProps) {
       />
 
       {/* Preview Uploaded File */}
-      {fileSelected ? (
+      {fileSelected !== null ? (
         <PreviewSelectedFile file={fileSelected} />
       ) : (
         <p className="text-sm text-gray-500">No file selected</p>

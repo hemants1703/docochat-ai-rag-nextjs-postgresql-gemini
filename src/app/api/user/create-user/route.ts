@@ -56,8 +56,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       }
     );
   }
-
-  console.log("userDetails", userDetails);
-
-  return NextResponse.json({ message: "User created successfully" });
 }

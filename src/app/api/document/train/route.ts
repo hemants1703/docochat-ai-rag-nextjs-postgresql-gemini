@@ -5,23 +5,32 @@ import {
   supportedFileTypes,
 } from "@/lib/supportedFileTypes";
 import {
+  extractTextFromPDF,
   extractTextFromRTF,
   extractTextFromTXTOrMD,
 } from "@/lib/api-services/train/text-extraction-services";
-import { chunkText } from "@/lib/api-services/train/text-chunking-services";
-import OpenAI from "openai";
-import { embedChunkedText } from "@/lib/api-services/train/text-embedding-service";
 import { UserDetails } from "@/app/train/page";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { embedExtractedTextAndUpsertToSupabaseDB } from "@/lib/api-services/train/text-upsert-to-db";
 
+/**
+ * This API endpoint is used to train the file on the vector store.
+ * It is used to extract the text from the file and embed it into the vector store.
+ *
+ * Written by: Hemant Sharma (GH: @hemants1703)
+ *
+ * @param request - The request object containing the form data with the file to be trained.
+ * @returns A JSON response with the success status and message.
+ */
 export async function POST(
   request: NextRequest
 ): Promise<NextResponse<{ message: string; error?: Error }>> {
   const formData: FormData = await request.formData();
-  const fileContent: File = formData.get("file") as File;
+  const receivedFile: File = formData.get("file") as File;
 
   const fileType: SupportedFileType | undefined = supportedFileTypes.find(
     (fileType: SupportedFileType) => {
-      return fileType.mime === fileContent.type;
+      return fileType.mime === receivedFile.type;
     }
   );
 
@@ -40,7 +49,7 @@ export async function POST(
     formData.get("userDetails") as string
   ) as UserDetails;
 
-  const supabase = await createClient();
+  const supabase: SupabaseClient = await createClient();
 
   // Check if the user has reached the maximum number of files available
   const { data, error } = await supabase
@@ -68,41 +77,25 @@ export async function POST(
     case "txt":
     case "md":
       try {
-        const extractedText: string = await extractTextFromTXTOrMD(fileContent); // Extract text from TXT/MD file(s)
-        const textChunks: string[] = await chunkText(extractedText, 100, 20); // Chunk the extracted text into smaller chunks
-        const textEmbeddings: OpenAI.Embeddings.CreateEmbeddingResponse =
-          await embedChunkedText(textChunks, "text-embedding-3-small"); // Embed the text chunks using OpenAI's text-embedding-3-small model
+        const extractedText: string | Error = await extractTextFromTXTOrMD(
+          receivedFile
+        ); // Extract text from TXT/MD file(s)
 
-        // Insert one row per text chunk with its corresponding vector
-        const insertPromises = textEmbeddings.data.map((embedding, index) => {
-          return supabase.from("vector_store").insert({
-            user_id: "test",
-            content: textChunks[index],
-            vectors: embedding.embedding,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        });
-
-        const results = await Promise.all(insertPromises);
-
-        // Check for any errors in the insertions
-        for (const result of results) {
-          if (result.error) {
-            throw new Error(result.error.message);
-          }
+        if (extractedText instanceof Error) {
+          throw new Error(extractedText.message);
         }
 
-        console.log({
-          user_id: "test",
-          content: extractedText,
-          textChunks,
-          textEmbeddings,
-          vectors: textEmbeddings.data.map(
-            (embedding: OpenAI.Embeddings.Embedding) => embedding.embedding
-          ),
-          data: results,
-        });
+        // Upsert the extracted text by chunking and embedding it to the Supabase DB
+        const result = await embedExtractedTextAndUpsertToSupabaseDB(
+          extractedText,
+          userDetails.id,
+          receivedFile,
+          supabase
+        );
+
+        if (result instanceof Error) {
+          throw new Error(result.message);
+        }
 
         return NextResponse.json(
           {
@@ -132,45 +125,24 @@ export async function POST(
     case "rtf":
       try {
         console.log("extracting text from RTF file");
-        const extractedText: string = await extractTextFromRTF(fileContent); // Extract text from RTF file
-        const textChunks: string[] = await chunkText(extractedText, 100, 20); // Chunk the extracted text into smaller chunks
-        const textEmbeddings: OpenAI.Embeddings.CreateEmbeddingResponse =
-          await embedChunkedText(textChunks, "text-embedding-3-small"); // Embed the text chunks using OpenAI's text-embedding-3-small model
+        const extractedText: string | Error = await extractTextFromRTF(
+          receivedFile
+        ); // Extract text from RTF file
 
-        // Insert one row per text chunk with its corresponding vector
-        const insertPromises = textEmbeddings.data.map((embedding, index) => {
-          return supabase.from("vector_store").insert({
-            user_id: userDetails.id,
-            file_name: fileContent.name,
-            file_type: fileType.ext,
-            file_size: fileContent.size,
-            file_content: extractedText,
-            content: textChunks[index],
-            vectors: embedding.embedding,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        });
-
-        const results = await Promise.all(insertPromises);
-
-        // Check for any errors in the insertions
-        for (const result of results) {
-          if (result.error) {
-            throw new Error(result.error.message);
-          }
+        if (extractedText instanceof Error) {
+          throw new Error(extractedText.message);
         }
 
-        const { data, error } = await supabase
-          .from("users")
-          .update({
-            files_used: 1,
-            files_available: 0,
-          })
-          .eq("id", userDetails.id);
+        // Upsert the extracted text by chunking and embedding it to the Supabase DB
+        const result = await embedExtractedTextAndUpsertToSupabaseDB(
+          extractedText,
+          userDetails.id,
+          receivedFile,
+          supabase
+        );
 
-        if (error) {
-          throw new Error(error.message);
+        if (result instanceof Error) {
+          throw new Error(result.message);
         }
 
         return NextResponse.json(
@@ -195,6 +167,50 @@ export async function POST(
             status: 500,
             statusText: "Internal Server Error: RTF file",
           }
+        );
+      }
+      break;
+    case "pdf":
+      try {
+        const extractedText: string | Error = await extractTextFromPDF(
+          receivedFile
+        ); // Extract text from PDF file
+
+        if (extractedText instanceof Error) {
+          throw new Error(extractedText.message);
+        }
+
+        // Upsert the extracted text by chunking and embedding it to the Supabase DB
+        const result = await embedExtractedTextAndUpsertToSupabaseDB(
+          extractedText,
+          userDetails.id,
+          receivedFile,
+          supabase
+        );
+
+        if (result instanceof Error) {
+          throw new Error(result.message);
+        }
+
+        return NextResponse.json(
+          {
+            message: "File trained successfully",
+          },
+          {
+            status: 200,
+            statusText: "OK",
+          }
+        );
+      } catch (error) {
+        console.error("Error while training PDF file", error);
+        return NextResponse.json(
+          {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Error while training PDF file",
+          },
+          { status: 500, statusText: "Internal Server Error: PDF file" }
         );
       }
       break;

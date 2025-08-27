@@ -5,13 +5,22 @@ import {
 import { fileTypeFromBuffer } from "file-type";
 import { NextRequest, NextResponse } from "next/server";
 
+/**
+ * This API endpoint is used to confirm if the file is supported by the backend.
+ * It is used to check if the file is supported by the backend before uploading it to the vector store.
+ * Written by: Hemant Sharma (GH: @hemants1703)
+ *
+ * @param request - The request object containing the form data with the file to be uploaded.
+ * @returns A JSON response with the success status and message.
+ */
+
 export async function POST(
   request: NextRequest
 ): Promise<
   NextResponse<{ success: boolean; message?: string; error?: Error }>
 > {
   try {
-    const formData = await request.formData();
+    const formData: FormData = await request.formData();
 
     const uploadedFile: File | null = formData.get("file") as File | null;
 

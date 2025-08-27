@@ -2,11 +2,7 @@ import ChatInterface from "@/components/features/chat/chat-interface";
 import { FileText, Sparkles } from "lucide-react";
 
 export default async function ChatPage() {
-  return (
-    <section className="flex flex-1 flex-col h-screen overflow-y-auto p-4 max-w-7xl mx-auto">
-      <ChatInterface />
-    </section>
-  );
+  return <ChatInterface />;
 }
 
 export function ChatMessagesWelcomeScreen() {

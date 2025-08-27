@@ -1,11 +1,12 @@
 "use client";
 
 import { UserDetails } from "@/app/train/page";
-import ChatInput, { ChatMessage } from "./chat-input";
+import ChatInput from "./chat-input";
 import ChatMessages from "./chat-messages";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "../../../../supabase/client";
+import { redirect } from "next/navigation";
 
 export default function ChatInterface() {
   const [inputMessage, setInputMessage] = useState<string>("");
@@ -13,16 +14,7 @@ export default function ChatInterface() {
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [chats, setChats] = useState<any[]>([]);
 
-  useEffect(() => {
-    const userDetails = localStorage.getItem("user-docochat-ai");
-    if (userDetails) {
-      setUserDetails(JSON.parse(userDetails));
-    } else {
-      toast.error("User details not found");
-    }
-  }, []);
-
-  const fetchChats = async () => {
+  async function fetchChats(userDetails: UserDetails) {
     const supabase = createClient();
 
     const { data: chats, error } = await supabase
@@ -36,20 +28,34 @@ export default function ChatInterface() {
     } else {
       setChats(chats);
     }
-  };
+  }
+
+  function handleMessageSent() {
+    if (userDetails) {
+      fetchChats(userDetails);
+    }
+  }
 
   useEffect(() => {
-    fetchChats();
-  }, [userDetails]);
+    const userDetailsLS = localStorage.getItem("user-docochat-ai");
 
-  const handleMessageSent = async () => {
-    fetchChats();
-  };
+    // If user details are not found, redirect to train page
+    if (!userDetailsLS) {
+      toast.error("Redirect", {
+        description:
+          "Redirecting to train page since you haven't trained any documents yet to chat with them, first train your documents to chat with them.",
+      });
+      redirect("/train");
+    } else if (userDetailsLS) {
+      setUserDetails(JSON.parse(userDetailsLS));
+      fetchChats(JSON.parse(userDetailsLS));
+    }
+  }, []);
 
   return (
-    <div className="flex flex-col flex-1 space-y-4 h-screen overflow-y-auto">
+    <div className="flex flex-col flex-1 max-w-4xl mx-auto p-4 space-y-4 h-screen overflow-y-auto">
       <ChatMessages chats={chats} />
-      {userDetails ? (
+      {userDetails && (
         <ChatInput
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
@@ -57,13 +63,7 @@ export default function ChatInterface() {
           userDetails={userDetails}
           handleMessageSent={handleMessageSent}
         />
-      ) : (
-        <ChatInputError />
       )}
     </div>
   );
-}
-
-export function ChatInputError() {
-  return <div>Cannot find user details</div>;
 }

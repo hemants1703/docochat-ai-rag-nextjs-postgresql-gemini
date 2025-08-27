@@ -10,18 +10,11 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="flex flex-col h-svh bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800">
-      {/* <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-        <h1 className="text-2xl font-bold text-center w-full text-gray-900 dark:text-gray-100 tracking-tight">
-          Welcome to Docochat AI! Start chatting with your documents.
-        </h1>
-      </header> */}
-      <section className="flex flex-1">
-        <Sidebar />
-        <div className="flex flex-1 flex-col h-screen overflow-y-auto bg-white dark:bg-gray-800">
-          {children}
-        </div>
-      </section>
+    <main className="flex flex-1 h-svh bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800">
+      <Sidebar />
+      <div className="flex flex-1 overflow-y-auto bg-white dark:bg-gray-800">
+        {children}
+      </div>
     </main>
   );
 }

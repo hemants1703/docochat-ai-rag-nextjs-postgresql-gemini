@@ -1,18 +1,9 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## DocoChat AI - Talk to your documents
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. This application is developed using Gemini API with the gemini-embedding-001 model using the outputDimensionality as 1536 for smaller output saving storage space and increased computational efficiency for downstream applications.
+2. This projects has been built following the best practices and making sure to document code excerpts wherever possible in proper detail for better understanding.
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

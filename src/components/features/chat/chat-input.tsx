@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { sendMessage } from "@/lib/actions/chat/chat-actions";
-import { ArrowUpIcon, Loader2Icon } from "lucide-react";
+import { ArrowRightIcon, Loader2Icon } from "lucide-react";
 import { useActionState, useEffect, useRef } from "react";
+import { toast } from "sonner";
 
-export interface ChatMessage {
+export interface ChatMessageFormState {
   role: "user" | "assistant";
   content: string;
   completions?: string;
   userDetails: UserDetails;
+  error?: string;
 }
 
 export default function ChatInput(props: {
@@ -24,7 +26,7 @@ export default function ChatInput(props: {
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [formState, formAction, isFormPending] = useActionState<
-    ChatMessage,
+    ChatMessageFormState,
     FormData
   >(sendMessage, { role: "user", content: "", userDetails: props.userDetails });
 
@@ -40,8 +42,16 @@ export default function ChatInput(props: {
     }
   }, [formState]);
 
+  useEffect(() => {
+    if (formState.error) {
+      toast.error("Error Sending Message", {
+        description: formState.error,
+      });
+    }
+  }, [formState.error]);
+
   return (
-    <form action={formAction} className="flex items-center gap-2">
+    <form action={formAction} className="flex items-end justify-evenly gap-2">
       <Textarea
         ref={textareaRef}
         name="userTypedMessage"
@@ -56,11 +66,23 @@ export default function ChatInput(props: {
         name="userDetails"
         value={JSON.stringify(props.userDetails)}
       />
-      <Button type="submit" disabled={isFormPending || !props.inputMessage}>
+      <Button
+        type="submit"
+        disabled={isFormPending || !props.inputMessage}
+        className="group"
+      >
         {isFormPending ? (
-          <Loader2Icon className="w-4 h-4 animate-spin" />
+          <>
+            <span>Sending...</span>
+            <Loader2Icon className="w-4 h-4 animate-spin" />
+          </>
         ) : (
-          <ArrowUpIcon className="w-4 h-4" />
+          <>
+            <span>Send</span>
+            <span className="group-hover:scale-110 group-hover:-rotate-450 transition-all duration-150">
+              <ArrowRightIcon className="size-4" />
+            </span>
+          </>
         )}
       </Button>
     </form>

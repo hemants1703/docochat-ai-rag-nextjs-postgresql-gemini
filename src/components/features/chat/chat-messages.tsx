@@ -2,7 +2,7 @@
 
 import { ChatMessage } from "./chat-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, User, Sparkles, FileText, Clock } from "lucide-react";
+import { Bot, User, Sparkles, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
 import { ChatMessagesWelcomeScreen } from "@/app/chat/page";
@@ -32,7 +32,7 @@ export default function ChatMessages(props: ChatMessagesProps) {
     });
   };
 
-  if (props.chats?.length === 0) {
+  if (!props.chats || props.chats?.length === 0) {
     return <ChatMessagesWelcomeScreen />;
   }
 
