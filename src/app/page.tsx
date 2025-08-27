@@ -77,7 +77,8 @@ export default function Home() {
             {[
               {
                 title: "Supported Formats",
-                description: "PDF, DOCX, TXT, MD, CSV, RTF",
+                description:
+                  "PDF, TXT, MD, RTF (DOCX & CSV are under development)",
                 icon: FileText,
               },
               {

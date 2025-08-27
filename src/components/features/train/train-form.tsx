@@ -177,7 +177,7 @@ export default function TrainForm() {
         <Input
           type="file"
           name="file"
-          accept=".pdf,.docx,.txt,.md,.csv,.rtf"
+          accept=".pdf,.txt,.md,.rtf"
           className="w-full"
           ref={fileInputRef}
           disabled={isResponsePending}

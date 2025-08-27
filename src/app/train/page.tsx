@@ -23,7 +23,8 @@ export default async function TrainPage() {
           </h1>
           <p className="text-base text-gray-600 dark:text-gray-300">
             Upload one or more documents and start chatting with them instantly.
-            Supported formats: PDF, DOCX, TXT, MD, CSV, RTF.
+            Supported formats: PDF, TXT, MD, RTF (DOCX & CSV are under
+            development).
           </p>
         </header>
         <TrainForm />

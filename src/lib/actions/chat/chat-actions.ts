@@ -30,22 +30,32 @@ export async function sendMessage(
 
   const supabase = await createClient();
 
-  const { data, error } = await supabase.rpc("match_trained_documents", {
-    query_embedding: embedding.embeddings?.[0].values,
-    match_threshold: 0.1,
-    match_count: 10,
-  });
+  const { data: fetchedFileContent, error } = await supabase.rpc(
+    "match_trained_documents",
+    {
+      query_embedding: embedding.embeddings?.[0].values,
+      match_threshold: 0.5,
+      match_count: 10,
+    }
+  );
 
   if (error) {
     console.error("Error matching documents", error);
     return previousState;
   }
 
-  const fileContent = data.length > 0 ? data[0].file_content : "";
+  // Accumulate file content from the fetched file content
+  let fileContent = "";
+  if (fetchedFileContent.length > 0) {
+    fetchedFileContent.forEach(
+      (content: { file_content: string }) =>
+        (fileContent += content.file_content)
+    );
+  }
 
   const systemPrompt = fileContent
     ? `
-  You are a helpful assistant that can answer questions and help with tasks. The user has uploaded documents to the system. The uploaded document's content is this: ${fileContent}
+  You are a helpful assistant that can answer questions and help with tasks. The user has uploaded documents to the system. You are strictly limited to the context of the uploaded documents. The uploaded document's content is this: ${fileContent}
   `
     : "You are a helpful assistant that can answer questions and help with tasks. The user has uploaded documents to the system and you already have the context for that";
 

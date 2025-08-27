@@ -1,6 +1,6 @@
 ## Docochat AI — Talk to your documents
 
-Docochat AI lets you upload documents (PDF, DOCX, TXT, MD, CSV, RTF), train them into a vector store, and chat with them through a sleek, modern interface. It’s built for robust performance, clean architecture, and an excellent user experience.
+Docochat AI lets you upload documents (PDF, TXT, MD, RTF), train them into a vector store, and chat with them through a sleek, modern interface. It’s built for robust performance, clean architecture, and an excellent user experience.
 
 - **Framework**: Next.js 15 (App Router), React 19
 - **UI**: Tailwind CSS 4, shadcn/ui, Radix primitives
@@ -60,7 +60,7 @@ Key modules:
 
 ## Features
 
-- **Document training**: PDF, DOCX, TXT, MD, CSV, RTF
+- **Document training**: PDF, TXT, MD, RTF (DOCX & CSV are under development)
 - **Semantic retrieval**: pgvector with custom match RPC
 - **Chat with context**: Gemini responses grounded in retrieved chunks
 - **Modern UI**: Accessible components (Radix), responsive design, dark mode
