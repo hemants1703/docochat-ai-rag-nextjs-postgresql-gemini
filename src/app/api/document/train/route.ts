@@ -5,6 +5,8 @@ import {
   supportedFileTypes,
 } from "@/lib/supportedFileTypes";
 import {
+  extractTextFromCSV,
+  extractTextFromDOCX,
   extractTextFromPDF,
   extractTextFromRTF,
   extractTextFromTXTOrMD,
@@ -214,6 +216,81 @@ export async function POST(
         );
       }
       break;
+    case "docx":
+      try {
+        const extractedText: string | Error = await extractTextFromDOCX(
+          receivedFile
+        );
+
+        if (extractedText instanceof Error) {
+          throw new Error(extractedText.message);
+        }
+
+        const result = await embedExtractedTextAndUpsertToSupabaseDB(
+          extractedText,
+          userDetails.id,
+          receivedFile,
+          supabase
+        );
+
+        if (result instanceof Error) {
+          throw new Error(result.message);
+        }
+
+        return NextResponse.json(
+          { message: "File trained successfully" },
+          { status: 200, statusText: "OK" }
+        );
+      } catch (error) {
+        console.error("Error while training DOCX file", error);
+        return NextResponse.json(
+          {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Error while training DOCX file",
+          },
+          { status: 500, statusText: "Internal Server Error: DOCX file" }
+        );
+      }
+      break;
+    case "csv":
+      try {
+        const extractedText: string | Error = await extractTextFromCSV(
+          receivedFile
+        );
+
+        if (extractedText instanceof Error) {
+          throw new Error(extractedText.message);
+        }
+
+        const result = await embedExtractedTextAndUpsertToSupabaseDB(
+          extractedText,
+          userDetails.id,
+          receivedFile,
+          supabase
+        );
+
+        if (result instanceof Error) {
+          throw new Error(result.message);
+        }
+
+        return NextResponse.json(
+          { message: "File trained successfully" },
+          { status: 200, statusText: "OK" }
+        );
+      } catch (error) {
+        console.error("Error while training CSV file", error);
+        return NextResponse.json(
+          {
+            message:
+              error instanceof Error
+                ? error.message
+                : "Error while training CSV file",
+          },
+          { status: 500, statusText: "Internal Server Error: CSV file" }
+        );
+      }
     default:
       break;
   }

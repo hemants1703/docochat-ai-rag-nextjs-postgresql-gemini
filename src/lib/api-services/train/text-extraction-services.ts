@@ -1,5 +1,8 @@
 import rtf2text from "rtf2text";
 import { PdfReader } from "pdfreader";
+import mammoth from "mammoth";
+import csv from "csv-parser";
+import { Readable } from "stream";
 
 /**
  * This function is used to extract the text from a TXT or MD file.
@@ -91,4 +94,62 @@ export const extractTextFromPDF = async (
       }
     });
   });
+};
+
+/**
+ * This function is used to extract the text from a DOCX file.
+ *
+ * Written by: Hemant Sharma (GH: @hemants1703)
+ *
+ * @param file - The file to extract the text from.
+ * @returns A promise that resolves to the text extracted from the file.
+ */
+export const extractTextFromDOCX = async (
+  file: File
+): Promise<string | Error> => {
+  return new Promise(
+    async (resolve: (text: string) => void, reject: (error: Error) => void) => {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const { value: parsedText } = await mammoth.extractRawText({
+          buffer: buffer,
+        });
+        resolve((parsedText || "").trim());
+      } catch (error: any) {
+        reject(new Error(`Failed to parse DOCX file: ${error.message}`));
+      }
+    }
+  );
+};
+
+export const extractTextFromCSV = async (
+  file: File
+): Promise<string | Error> => {
+  return new Promise(
+    async (resolve: (text: string) => void, reject: (error: Error) => void) => {
+      try {
+        let parsedText: string[] = [];
+
+        const arrayBuffer = await file.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        const stream = Readable.from(buffer);
+        stream
+          .pipe(csv())
+          .on("data", (data) => {
+            console.log(data);
+            parsedText.push(Object.values(data).join(","));
+          })
+          .on("end", () => {
+            console.log("CSV file parsed successfully");
+            resolve(parsedText.join("\n").trim());
+          })
+          .on("error", (error) => {
+            reject(new Error(`Failed to parse CSV file: ${error.message}`));
+          });
+      } catch (error: any) {
+        reject(new Error(`Failed to parse CSV file: ${error.message}`));
+      }
+    }
+  );
 };

@@ -60,7 +60,7 @@ Key modules:
 
 ## Features
 
-- **Document training**: PDF, TXT, MD, RTF (DOCX & CSV are under development)
+- **Document training**: PDF, TXT, MD, RTF, DOCX & CSV
 - **Semantic retrieval**: pgvector with custom match RPC
 - **Chat with context**: Gemini responses grounded in retrieved chunks
 - **Modern UI**: Accessible components (Radix), responsive design, dark mode
@@ -177,7 +177,7 @@ Response 201:
 ## Local development tips
 
 - Keep an eye on quotas in the `users` table; training enforces limits.
-- The text extraction pipeline supports TXT/MD/RTF/PDF out of the box. Extend DOCX/CSV as needed.
+- The text extraction pipeline supports TXT/MD/RTF/PDF/DOCX/CSV out of the box.
 - For embeddings, the output dimensionality is set to 1536 to balance storage and performance.
 
 ---

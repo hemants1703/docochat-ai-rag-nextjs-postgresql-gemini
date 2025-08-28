@@ -18,7 +18,7 @@ export default function PreviewSelectedFile(props: PreviewSelectedFileProps) {
         </p>
       </div>
 
-      <p className="text-sm font-medium text-ellipsis overflow-hidden whitespace-nowrap">
+      <p className="text-sm font-medium text-ellipsis overflow-hidden whitespace-nowrap truncate w-full">
         {props.file.size} bytes ({props.file.type})
       </p>
     </div>
