@@ -7,12 +7,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createClient } from "../../../../supabase/client";
 import { redirect } from "next/navigation";
+import { ChatMessageFormState } from "./chat-input";
 
 export default function ChatInterface() {
   const [inputMessage, setInputMessage] = useState<string>("");
-  const [gptResponse, setGptResponse] = useState<string>("");
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
-  const [chats, setChats] = useState<any[]>([]);
+  const [chats, setChats] = useState<ChatMessageFormState[]>([]);
 
   async function fetchChats(userDetails: UserDetails) {
     const supabase = createClient();
@@ -59,7 +59,6 @@ export default function ChatInterface() {
         <ChatInput
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
-          setGptResponse={setGptResponse}
           userDetails={userDetails}
           handleMessageSent={handleMessageSent}
         />

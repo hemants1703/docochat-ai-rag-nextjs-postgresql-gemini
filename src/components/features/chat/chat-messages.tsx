@@ -1,17 +1,17 @@
 "use client";
 
-import { ChatMessage } from "./chat-input";
+import { ChatMessageFormState } from "./chat-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, User, Sparkles, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef } from "react";
-import { ChatMessagesWelcomeScreen } from "@/app/chat/page";
+import ChatMessagesWelcomeScreen from "@/components/features/chat/chat-messages-welcome";
 import ReactMarkdown from "react-markdown";
 
 interface ChatMessagesProps {
-  messages?: ChatMessage[];
+  messages?: ChatMessageFormState[];
   isLoading?: boolean;
-  chats?: any[];
+  chats?: ChatMessageFormState[];
 }
 
 export default function ChatMessages(props: ChatMessagesProps) {
@@ -87,8 +87,8 @@ export default function ChatMessages(props: ChatMessagesProps) {
 
               <div className="flex items-center space-x-1 ml-4 text-xs text-gray-500 dark:text-gray-400">
                 <Clock className="w-3 h-3" />
-                <span>{formatTime(message.created_at)}</span>
-                {/* {message.role === "assistant" && (
+                <span>{formatTime(message.created_at || "")}</span>
+                {message.role === "assistant" && (
                   <>
                     <span>•</span>
                     <span className="flex items-center space-x-1">
@@ -96,7 +96,7 @@ export default function ChatMessages(props: ChatMessagesProps) {
                       <span>AI Assistant</span>
                     </span>
                   </>
-                )} */}
+                )}
               </div>
             </div>
 

@@ -76,7 +76,7 @@ export async function embedExtractedTextAndUpsertToSupabaseDB(
     }
   }
 
-  const { data, error } = await supabaseClient
+  const { error } = await supabaseClient
     .from("users")
     .update({
       files_used: 1,

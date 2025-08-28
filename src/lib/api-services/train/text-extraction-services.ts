@@ -116,8 +116,14 @@ export const extractTextFromDOCX = async (
           buffer: buffer,
         });
         resolve((parsedText || "").trim());
-      } catch (error: any) {
-        reject(new Error(`Failed to parse DOCX file: ${error.message}`));
+      } catch (error) {
+        reject(
+          new Error(
+            `Failed to parse DOCX file: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
+          )
+        );
       }
     }
   );
@@ -129,7 +135,7 @@ export const extractTextFromCSV = async (
   return new Promise(
     async (resolve: (text: string) => void, reject: (error: Error) => void) => {
       try {
-        let parsedText: string[] = [];
+        const parsedText: string[] = [];
 
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
@@ -147,8 +153,14 @@ export const extractTextFromCSV = async (
           .on("error", (error) => {
             reject(new Error(`Failed to parse CSV file: ${error.message}`));
           });
-      } catch (error: any) {
-        reject(new Error(`Failed to parse CSV file: ${error.message}`));
+      } catch (error) {
+        reject(
+          new Error(
+            `Failed to parse CSV file: ${
+              error instanceof Error ? error.message : "Unknown error"
+            }`
+          )
+        );
       }
     }
   );

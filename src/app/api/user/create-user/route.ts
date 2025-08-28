@@ -20,7 +20,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
 
   try {
-    const { data, error } = await supabase.from("users").insert({
+    const { error } = await supabase.from("users").insert({
       id: userDetails.id,
       username: userDetails.username,
       credits_available: userDetails.credits_available,

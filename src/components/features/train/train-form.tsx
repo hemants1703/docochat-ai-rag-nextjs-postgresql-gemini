@@ -8,7 +8,8 @@ import { useActionState, useState, useRef, useEffect } from "react";
 import PreviewSelectedFile from "./preview-selected-file";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { QuotaExceeded, UserDetails } from "@/app/train/page";
+import { UserDetails } from "@/app/train/page";
+import QuotaExceeded from "@/components/features/train/quota-exceeded";
 import { createClient } from "../../../../supabase/client";
 import { redirect } from "next/navigation";
 import { generateRandomUUID } from "@/lib/actions/train/uuid-generator";
@@ -108,7 +109,7 @@ export default function TrainForm() {
     if (formState.success) {
       updateUserDetails();
     }
-  }, [formState.message]);
+  }, [formState]);
 
   if (!userDetails) {
     return (

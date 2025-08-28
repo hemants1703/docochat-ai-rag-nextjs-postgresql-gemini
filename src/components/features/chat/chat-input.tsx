@@ -11,16 +11,16 @@ import { toast } from "sonner";
 
 export interface ChatMessageFormState {
   role: "user" | "assistant";
-  content: string;
+  message: string;
   completions?: string;
   userDetails: UserDetails;
+  created_at?: string;
   error?: string;
 }
 
 export default function ChatInput(props: {
   inputMessage: string;
   setInputMessage: (message: string) => void;
-  setGptResponse: (response: string) => void;
   userDetails: UserDetails;
   handleMessageSent: () => void;
 }) {
@@ -28,7 +28,11 @@ export default function ChatInput(props: {
   const [formState, formAction, isFormPending] = useActionState<
     ChatMessageFormState,
     FormData
-  >(sendMessage, { role: "user", content: "", userDetails: props.userDetails });
+  >(sendMessage, {
+    role: "user",
+    message: "",
+    userDetails: props.userDetails,
+  });
 
   useEffect(() => {
     if (
@@ -37,7 +41,6 @@ export default function ChatInput(props: {
       textareaRef.current
     ) {
       textareaRef.current.value = "";
-      props.setGptResponse(formState.completions);
       props.handleMessageSent();
     }
   }, [formState]);
