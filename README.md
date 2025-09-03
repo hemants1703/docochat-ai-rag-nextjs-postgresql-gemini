@@ -399,24 +399,12 @@ NEXT_PUBLIC_API_URL=https://your-domain.vercel.app
 
 ## 🗺️ Roadmap
 
-### 🔮 Upcoming Features
-
-- [ ] **Multi-Document Chat** — Train and query multiple documents simultaneously
-- [ ] **Source Attribution** — Show exact document sources for each response
-- [ ] **Advanced RAG** — Custom prompt templates and citation formats
-- [ ] **File Management** — Upload, list, delete, and retrain documents
-- [ ] **Export Options** — Download conversations and insights
-- [ ] **Collaborative Features** — Share trained documents with team members
-- [ ] **Analytics Dashboard** — Usage statistics and performance metrics
-- [ ] **API Integration** — Public API for third-party integrations
-
 ### 🧪 Technical Improvements
 
 - [ ] **Unit Testing** — Comprehensive test coverage
 - [ ] **E2E Testing** — Automated workflow validation
 - [ ] **Performance Monitoring** — Real-time performance tracking
 - [ ] **Caching Layer** — Redis integration for faster responses
-- [ ] **Webhook Support** — Real-time document updates
 
 ---
 
@@ -455,7 +443,6 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 - **Google Gemini** — Powering our AI capabilities
 - **Supabase** — Providing robust backend infrastructure
-- **Vercel** — Hosting and deployment platform
 - **shadcn/ui** — Beautiful, accessible UI components
 - **LangChain** — Text processing and chunking utilities
 
