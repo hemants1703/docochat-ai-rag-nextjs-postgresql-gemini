@@ -25,21 +25,14 @@ export default function ChatInput(props: {
   handleMessageSent: () => void;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [formState, formAction, isFormPending] = useActionState<
-    ChatMessageFormState,
-    FormData
-  >(sendMessage, {
+  const [formState, formAction, isFormPending] = useActionState<ChatMessageFormState, FormData>(sendMessage, {
     role: "user",
     message: "",
     userDetails: props.userDetails,
   });
 
   useEffect(() => {
-    if (
-      formState.role === "assistant" &&
-      formState.completions &&
-      textareaRef.current
-    ) {
+    if (formState.role === "assistant" && formState.completions && textareaRef.current) {
       textareaRef.current.value = "";
       props.handleMessageSent();
     }
@@ -64,19 +57,11 @@ export default function ChatInput(props: {
         onChange={(e) => props.setInputMessage(e.target.value)}
         disabled={!props.userDetails}
       />
-      <Input
-        type="hidden"
-        name="userDetails"
-        value={JSON.stringify(props.userDetails)}
-      />
-      <Button
-        type="submit"
-        disabled={isFormPending || !props.inputMessage}
-        className="group"
-      >
+      <Input type="hidden" name="userDetails" value={JSON.stringify(props.userDetails)} />
+      <Button type="submit" disabled={isFormPending || !props.inputMessage} className="group">
         {isFormPending ? (
           <>
-            <span>Sending...</span>
+            <span>Generating Response...</span>
             <Loader2Icon className="w-4 h-4 animate-spin" />
           </>
         ) : (

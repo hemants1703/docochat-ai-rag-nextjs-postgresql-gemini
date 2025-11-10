@@ -30,14 +30,16 @@ export async function sendMessage(
 
   const supabase = await createClient();
 
-  const { data: fetchedFileContent, error } = await supabase.rpc(
-    "match_trained_documents",
-    {
-      query_embedding: embedding.embeddings?.[0].values,
-      match_threshold: 0.5,
-      match_count: 10,
-    }
-  );
+  console.log("validatedFields.data.userDetails.id", validatedFields.data.userDetails.id);
+
+  const { data: fetchedFileContent, error } = await supabase.rpc("match_trained_documents", {
+    p_user_id: validatedFields.data.userDetails.id,
+    p_query_embedding: embedding.embeddings?.[0].values,
+    p_match_threshold: 0.5,
+    p_match_count: 10,
+  });
+
+  console.log("fetchedFileContent", fetchedFileContent);
 
   if (error) {
     console.error("Error matching documents", error);
@@ -47,10 +49,7 @@ export async function sendMessage(
   // Accumulate file content from the fetched file content
   let fileContent = "";
   if (fetchedFileContent.length > 0) {
-    fetchedFileContent.forEach(
-      (content: { file_content: string }) =>
-        (fileContent += content.file_content)
-    );
+    fetchedFileContent.forEach((content: { file_content: string }) => (fileContent += content.file_content));
   }
 
   const systemPrompt = fileContent
@@ -78,10 +77,7 @@ export async function sendMessage(
     console.error("Error fetching previous messages", error);
     return {
       ...previousState,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Error fetching previous messages",
+      error: error instanceof Error ? error.message : "Error fetching previous messages",
     };
   }
 
@@ -136,8 +132,7 @@ export async function sendMessage(
     console.error("Error sending message", error);
     return {
       ...previousState,
-      error:
-        error instanceof Error ? error.message : "Gemini API returned an error",
+      error: error instanceof Error ? error.message : "Gemini API returned an error",
     };
   }
 
