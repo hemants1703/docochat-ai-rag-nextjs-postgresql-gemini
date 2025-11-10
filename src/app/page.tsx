@@ -44,8 +44,7 @@ export default function Home() {
             Docochat AI
           </h1>
           <p className="text-2xl mb-12 text-gray-600 dark:text-gray-300 max-w-3xl mx-auto animate-fade-in">
-            Engage with your documents like never before. Upload, train, and
-            converse with your files effortlessly.
+            Engage with your documents like never before. Upload, train, and converse with your files effortlessly.
           </p>
           <Button
             asChild
@@ -61,9 +60,7 @@ export default function Home() {
         {/* Scroll Down Indicator */}
         <div className="absolute left-1/2 -translate-x-1/2 bottom-8 flex flex-col items-center z-10">
           <span className="block w-1.5 h-8 bg-gradient-to-b from-indigo-400 to-pink-400 rounded-full animate-bounce mb-2 opacity-80" />
-          <span className="text-xs text-gray-500 dark:text-gray-400 tracking-wide">
-            Scroll
-          </span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 tracking-wide">Scroll</span>
         </div>
       </section>
 
@@ -82,23 +79,16 @@ export default function Home() {
               },
               {
                 title: "Seamless Upload & Train",
-                description:
-                  "Integrate and train your documents with advanced AI seamlessly.",
+                description: "Integrate and train your documents with advanced AI seamlessly.",
                 icon: Upload,
               },
               {
                 title: "Intelligent Conversations",
-                description:
-                  "Extract insights and answers from your documents instantly.",
+                description: "Extract insights and answers from your documents instantly.",
                 icon: MessageCircle,
               },
             ].map((feature, index) => (
-              <FeatureCard
-                key={index}
-                title={feature.title}
-                description={feature.description}
-                icon={feature.icon}
-              />
+              <FeatureCard key={index} title={feature.title} description={feature.description} icon={feature.icon} />
             ))}
           </div>
         </div>
@@ -111,8 +101,7 @@ export default function Home() {
             Ready to Transform Your Documents?
           </h2>
           <p className="text-2xl mb-10 text-gray-600 dark:text-gray-300 animate-fade-in ">
-            Unlock 100 free credits and start your intelligent document journey
-            today.
+            Unlock 10 free credits and start your intelligent document journey today.
           </p>
           <Button
             asChild
@@ -128,9 +117,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-8 px-4 text-center text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 animate-fade-in ">
-        <p>
-          &copy; {new Date().getFullYear()} Docochat AI. All rights reserved.
-        </p>
+        <p>&copy; {new Date().getFullYear()} Docochat AI. All rights reserved.</p>
       </footer>
 
       {/* Custom Animations */}
@@ -175,18 +162,12 @@ export default function Home() {
   );
 }
 
-function FeatureCard(props: {
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className: string }>;
-}) {
+function FeatureCard(props: { title: string; description: string; icon: React.ComponentType<{ className: string }> }) {
   const Icon: React.ComponentType<{ className: string }> = props.icon;
   return (
     <div className="group text-center p-8 bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg rounded-2xl shadow-xl border hover:border-indigo-600 dark:hover:border-pink-400 transition-all duration-75 hover:scale-105 hover:shadow-2xl hover:bg-white/80 dark:hover:bg-gray-800/80 animate-fade-in ">
       <Icon className="h-12 w-12 mx-auto mb-4 text-indigo-600 dark:text-pink-400 group-hover:scale-110 transition-transform duration-75" />
-      <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
-        {props.title}
-      </h3>
+      <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">{props.title}</h3>
       <p className="text-gray-600 dark:text-gray-300">{props.description}</p>
     </div>
   );

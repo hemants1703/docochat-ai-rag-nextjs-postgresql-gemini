@@ -263,7 +263,7 @@ Creates new user with default credits.
 {
   "id": "uuid",
   "username": "string",
-  "credits_available": 100,
+  "credits_available": 10,
   "files_available": 1
 }
 ```
