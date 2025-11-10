@@ -21,7 +21,7 @@ export default function ChatSidebarContent() {
 
     if (error) {
       console.error("Error while getting file details", error);
-      return;
+      redirect("/train");
     }
 
     // console.log("data", data);
@@ -51,7 +51,7 @@ export default function ChatSidebarContent() {
   }, []);
 
   if (!userDetails) {
-    return null;
+    redirect("/train");
   }
 
   return (
