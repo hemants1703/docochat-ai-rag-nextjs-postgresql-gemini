@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import ToastProvider from "@/components/toast-provider";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,10 +17,30 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "DocoChat AI",
-    template: "%s | DocoChat AI",
+    default: "DocoChat RAG Powered AI",
+    template: "%s | DocoChat RAG Powered AI",
   },
   description: "Chat with your documents",
+  keywords: ["DocoChat", "RAG", "AI", "Document", "Chat", "Conversation"],
+  openGraph: {
+    title: "DocoChat RAG Powered AI",
+    description: "Chat with your documents",
+    images: [
+      "https://res.cloudinary.com/dej4ks4wd/image/upload/v1762757286/Screenshot_2025-11-10_at_12.16.47_PM_ngqhep.png",
+    ],
+    url: "https://docochat-rag-ai.hemantsharma.tech/",
+    siteName: "DocoChat RAG Powered AI",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DocoChat RAG Powered AI",
+    description: "Chat with your documents",
+    images: [
+      "https://res.cloudinary.com/dej4ks4wd/image/upload/v1762757286/Screenshot_2025-11-10_at_12.16.47_PM_ngqhep.png",
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -32,12 +53,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <Analytics />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
           <ToastProvider />
         </ThemeProvider>

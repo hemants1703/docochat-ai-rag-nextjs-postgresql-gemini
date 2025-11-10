@@ -17,17 +17,14 @@ export default function ChatSidebarContent() {
 
   const getFileDetails = async (userId: string) => {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from("vector_store")
-      .select("*")
-      .eq("user_id", userId);
+    const { data, error } = await supabase.from("vector_store").select("*").eq("user_id", userId);
 
     if (error) {
       console.error("Error while getting file details", error);
       return;
     }
 
-    console.log("data", data);
+    // console.log("data", data);
 
     const fileDetails = {
       file_name: data[0].file_name,
@@ -39,9 +36,8 @@ export default function ChatSidebarContent() {
   };
 
   useEffect(() => {
-    const localUserDetails: string | null =
-      localStorage.getItem("user-docochat-ai");
-    console.log("localUserDetails", localUserDetails);
+    const localUserDetails: string | null = localStorage.getItem("user-docochat-ai");
+    // console.log("localUserDetails", localUserDetails);
 
     if (localUserDetails && localUserDetails.length > 0) {
       setUserDetails(JSON.parse(localUserDetails));
@@ -64,9 +60,8 @@ export default function ChatSidebarContent() {
       {userDetails ? (
         <div className="border border-gray-200 dark:border-gray-700 p-4 rounded-lg mt-4 bg-yellow-50 dark:bg-yellow-900">
           <p className="text-xs">
-            You have {userDetails.files_used} files used and{" "}
-            {userDetails.files_available} files available for training &
-            chatting for free.
+            You have {userDetails.files_used} files used and {userDetails.files_available} files available for training
+            & chatting for free.
           </p>
         </div>
       ) : (
@@ -76,40 +71,27 @@ export default function ChatSidebarContent() {
   );
 }
 
-export function FileDetails({
-  fileDetails,
-}: {
-  fileDetails: FileDetails | null;
-}) {
+export function FileDetails({ fileDetails }: { fileDetails: FileDetails | null }) {
   if (!fileDetails)
     return (
       <div className="mt-4 p-4 rounded-lg bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-700">
-        <h3 className="text-xs font-black  dark:text-gray-500 mb-2 select-none">
-          DOCUMENT
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          Loading document details...
-        </p>
+        <h3 className="text-xs font-black  dark:text-gray-500 mb-2 select-none">DOCUMENT</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400">Loading document details...</p>
       </div>
     );
 
   return (
     <div className="mt-4 p-4 rounded-lg bg-white dark:bg-gray-900 shadow-sm border border-gray-200 dark:border-gray-700">
-      <h3 className="text-xs font-black opacity-50 tracking-tighter mb-2 select-none">
-        DOCUMENT
-      </h3>
+      <h3 className="text-xs font-black opacity-50 tracking-tighter mb-2 select-none">DOCUMENT</h3>
       <ul className="space-y-1 text-sm dark:text-gray-300">
         <li>
-          <span className="font-medium dark:text-gray-100">Name:</span>{" "}
-          {fileDetails.file_name}
+          <span className="font-medium dark:text-gray-100">Name:</span> {fileDetails.file_name}
         </li>
         <li>
-          <span className="font-medium dark:text-gray-100">Size:</span>{" "}
-          {fileDetails.file_size} bytes
+          <span className="font-medium dark:text-gray-100">Size:</span> {fileDetails.file_size} bytes
         </li>
         <li>
-          <span className="font-medium dark:text-gray-100">Type:</span>{" "}
-          {fileDetails.file_type}
+          <span className="font-medium dark:text-gray-100">Type:</span> {fileDetails.file_type}
         </li>
       </ul>
     </div>
