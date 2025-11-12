@@ -23,10 +23,7 @@ export interface TrainFormState {
 
 export default function TrainForm() {
   // React Hooks
-  const [formState, formAction, isResponsePending] = useActionState<
-    TrainFormState,
-    FormData
-  >(trainDocument, {
+  const [formState, formAction, isResponsePending] = useActionState<TrainFormState, FormData>(trainDocument, {
     file: null,
     error: undefined,
     success: undefined,
@@ -49,13 +46,10 @@ export default function TrainForm() {
     };
 
     try {
-      const createUserInSupabase = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/user/create-user`,
-        {
-          method: "POST",
-          body: JSON.stringify(newUserDetails),
-        }
-      );
+      const createUserInSupabase = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/create-user`, {
+        method: "POST",
+        body: JSON.stringify(newUserDetails),
+      });
 
       const createUserInSupabaseResponse = await createUserInSupabase.json();
 
@@ -84,10 +78,7 @@ export default function TrainForm() {
 
   const updateUserDetails = async () => {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", userDetails?.id);
+    const { data, error } = await supabase.from("users").select("*").eq("id", userDetails?.id);
 
     if (error) {
       console.error("Error while updating user details", error);
@@ -100,14 +91,13 @@ export default function TrainForm() {
     setUserDetails(data[0]);
 
     localStorage.setItem("user-docochat-ai", JSON.stringify(data[0]));
-
-    redirect("/chat");
   };
 
   // Update user details
   useEffect(() => {
     if (formState.success) {
       updateUserDetails();
+      redirect("/chat");
     }
   }, [formState]);
 
@@ -164,8 +154,7 @@ export default function TrainForm() {
       }
       console.error("File not supported: ", error);
       toast.error("Error", {
-        description:
-          error instanceof Error ? error.message : "Unsupported File",
+        description: error instanceof Error ? error.message : "Unsupported File",
       });
     }
   };
@@ -201,11 +190,7 @@ export default function TrainForm() {
         </Button>
       </div>
 
-      <Input
-        type="hidden"
-        name="userDetails"
-        value={JSON.stringify(userDetails)}
-      />
+      <Input type="hidden" name="userDetails" value={JSON.stringify(userDetails)} />
 
       {/* Preview Uploaded File */}
       {fileSelected !== null ? (
@@ -215,19 +200,11 @@ export default function TrainForm() {
       )}
 
       {/* Error and Success Messages */}
-      {formState.error && (
-        <p className="text-red-500 text-sm mt-2">{formState.error.message}</p>
-      )}
-      {formState.success && (
-        <p className="text-green-500 text-sm mt-2">{formState.message}</p>
-      )}
+      {formState.error && <p className="text-red-500 text-sm mt-2">{formState.error.message}</p>}
+      {formState.success && <p className="text-green-500 text-sm mt-2">{formState.message}</p>}
 
       {/* Submit Button */}
-      <Button
-        type="submit"
-        disabled={isResponsePending || !fileSelected}
-        className="w-full mt-4"
-      >
+      <Button type="submit" disabled={isResponsePending || !fileSelected} className="w-full mt-4">
         {isResponsePending ? (
           <>
             <Loader2Icon className="h-4 w-4 animate-spin" />

@@ -17,10 +17,7 @@ export default function ChatInterface() {
   async function fetchChats(userDetails: UserDetails) {
     const supabase = createClient();
 
-    const { data: chats, error } = await supabase
-      .from("chats_store")
-      .select("*")
-      .eq("user_id", userDetails?.id);
+    const { data: chats, error } = await supabase.from("chats_store").select("*").eq("user_id", userDetails?.id);
 
     if (error) {
       console.log("No chats found", error);

@@ -19,40 +19,40 @@ export default function ChatSidebarContent() {
     const supabase = createClient();
     const { data, error } = await supabase.from("vector_store").select("*").eq("user_id", userId);
 
-    if (error) {
+    if (error || data.length === 0) {
       console.error("Error while getting file details", error);
-      redirect("/train");
+      return null;
     }
 
-    // console.log("data", data);
-
-    const fileDetails = {
+    return {
       file_name: data[0].file_name,
       file_size: data[0].file_size,
       file_type: data[0].file_type,
     };
-
-    setFileDetails(fileDetails);
   };
 
   useEffect(() => {
     const localUserDetails: string | null = localStorage.getItem("user-docochat-ai");
-    // console.log("localUserDetails", localUserDetails);
 
     if (localUserDetails && localUserDetails.length > 0) {
       setUserDetails(JSON.parse(localUserDetails));
 
       const userId = JSON.parse(localUserDetails).id;
 
-      getFileDetails(userId);
+      const fetchFileDetails = async () => await getFileDetails(userId);
+
+      fetchFileDetails().then((fileDetails) => {
+        if (!fileDetails) {
+          redirect("/train");
+        }
+
+        setFileDetails(fileDetails);
+      });
     } else {
+      console.error("No user details found, redirecting to train page");
       redirect("/train");
     }
   }, []);
-
-  if (!userDetails) {
-    redirect("/train");
-  }
 
   return (
     <div>
