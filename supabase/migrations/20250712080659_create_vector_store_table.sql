@@ -21,18 +21,28 @@ create index if not exists vector_store_user_id_idx on vector_store (user_id);
 create index if not exists vector_store_created_at_idx on vector_store (created_at);
 create index if not exists vector_store_updated_at_idx on vector_store (updated_at);
 
--- Match documents using cosine distance (<=>) [Semantic Search Match Function for PostgreSQL in Supabase]
-create or replace function match_documents (
-  query_embedding vector(1536),
-  match_threshold float,
-  match_count int
+-- Create the function with a user_id check and safe parameter usage
+CREATE OR REPLACE FUNCTION match_trained_documents (
+  p_user_id uuid,
+  p_query_embedding vector(1536),
+  p_match_threshold double precision,
+  p_match_count integer
 )
-returns setof vector_store
-language sql
-as $$
-  select *
-  from vector_store
-  where vector_store.vectors <=> query_embedding < 1 - match_threshold
-  order by vector_store.vectors <=> query_embedding asc
-  limit least(match_count, 200);
+RETURNS SETOF vector_store
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- Enforce caller passes a user_id
+  IF p_user_id IS NULL THEN
+    RAISE EXCEPTION 'user_id must be provided';
+  END IF;
+
+  RETURN QUERY
+  SELECT *
+  FROM vector_store
+  WHERE user_id = p_user_id
+    AND vectors <=> p_query_embedding < 1 - p_match_threshold
+  ORDER BY vectors <=> p_query_embedding ASC
+  LIMIT LEAST(p_match_count, 200);
+END;
 $$;

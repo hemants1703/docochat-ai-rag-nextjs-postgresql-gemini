@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { UserDetails } from "@/app/train/page";
 import QuotaExceeded from "@/components/features/train/quota-exceeded";
-import { createClient } from "../../../../supabase/client";
+import { createClient } from "@/../supabase/client";
 import { redirect } from "next/navigation";
 import { generateRandomUUID } from "@/lib/actions/train/uuid-generator";
 
@@ -22,7 +22,6 @@ export interface TrainFormState {
 }
 
 export default function TrainForm() {
-  // React Hooks
   const [formState, formAction, isResponsePending] = useActionState<TrainFormState, FormData>(trainDocument, {
     file: null,
     error: undefined,
@@ -32,11 +31,19 @@ export default function TrainForm() {
   const [fileSelected, setFileSelected] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
+  const [isCreatingUser, setIsCreatingUser] = useState(false); // Add this
 
-  const createUserInSupabase = async () => {
+  const createUserInSupabaseAndStoreInLocalStorage = async () => {
+    // Prevent multiple simultaneous calls
+    if (isCreatingUser) {
+      return;
+    }
+
+    setIsCreatingUser(true);
+
     const newUserDetails: UserDetails = {
       id: generateRandomUUID(),
-      username: "test",
+      username: "docochat-ai-user",
       credits_available: 10,
       credits_used: 0,
       files_available: 1,
@@ -46,7 +53,7 @@ export default function TrainForm() {
     };
 
     try {
-      const createUserInSupabase = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/create-user`, {
+      const createUserInSupabase = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/user/create`, {
         method: "POST",
         body: JSON.stringify(newUserDetails),
       });
@@ -61,6 +68,8 @@ export default function TrainForm() {
       setUserDetails(newUserDetails);
     } catch (error) {
       console.error("Error while creating user in Supabase", error);
+    } finally {
+      setIsCreatingUser(false);
     }
   };
 
@@ -69,12 +78,12 @@ export default function TrainForm() {
     const userDetails = localStorage.getItem("user-docochat-ai");
 
     // If user details are not found, then only create a new user
-    if (!userDetails) {
-      createUserInSupabase();
-    } else {
+    if (!userDetails && !isCreatingUser) {
+      createUserInSupabaseAndStoreInLocalStorage();
+    } else if (userDetails) {
       setUserDetails(JSON.parse(userDetails));
     }
-  }, []);
+  }, []); // Remove isCreatingUser from deps to prevent re-runs
 
   const updateUserDetails = async () => {
     const supabase = createClient();

@@ -20,6 +20,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const supabase = await createClient();
 
   try {
+    // Check if user already exists
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", userDetails.id)
+      .single();
+
+    if (checkError && checkError.code !== "PGRST116") {
+      // PGRST116 = no rows returned
+      throw new Error(checkError.message);
+    }
+
+    // If user already exists, return success without creating duplicate
+    if (existingUser) {
+      return NextResponse.json(
+        { message: "User already exists" },
+        {
+          status: 200,
+          statusText: "OK",
+        }
+      );
+    }
+
+    // User doesn't exist, create new one
     const { error } = await supabase.from("users").insert({
       id: userDetails.id,
       username: userDetails.username,
@@ -44,8 +68,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   } catch (error) {
     console.error("Error while creating user", error);
-    const errorMessage =
-      error instanceof Error ? error.message : "Error while creating user";
+    const errorMessage = error instanceof Error ? error.message : "Error while creating user";
     return NextResponse.json(
       {
         message: errorMessage,

@@ -3,10 +3,7 @@ import { chunkText } from "./text-chunking-services";
 import { ContentEmbedding, EmbedContentResponse } from "@google/genai";
 import { embedChunkedText } from "./text-embedding-services";
 import { UserDetails } from "@/app/train/page";
-import {
-  SupportedFileType,
-  supportedFileTypes,
-} from "@/lib/supportedFileTypes";
+import { SupportedFileType, supportedFileTypes } from "@/lib/supportedFileTypes";
 
 export async function embedExtractedTextAndUpsertToSupabaseDB(
   extractedText: string,
@@ -34,16 +31,12 @@ export async function embedExtractedTextAndUpsertToSupabaseDB(
     return new Error("Supabase client cannot be null or undefined.");
   }
 
-  const fileType: SupportedFileType | undefined = supportedFileTypes.find(
-    (fileType: SupportedFileType) => {
-      return fileType.mime === receivedFile.type;
-    }
-  );
+  const fileType: SupportedFileType | undefined = supportedFileTypes.find((fileType: SupportedFileType) => {
+    return fileType.mime === receivedFile.type;
+  });
 
-  const textChunks: string[] = await chunkText(extractedText, 100, 20); // Chunk the extracted text into smaller chunks
-  const textEmbeddings: EmbedContentResponse | Error = await embedChunkedText(
-    textChunks
-  ); // Embed the text chunks using Gemini's gemini-embedding-001 model
+  const textChunks: string[] = await chunkText(extractedText, 1000, 200); // Chunk the extracted text into smaller chunks
+  const textEmbeddings: EmbedContentResponse | Error = await embedChunkedText(textChunks); // Embed the text chunks using Gemini's gemini-embedding-001 model
 
   if (textEmbeddings instanceof Error) {
     return new Error(textEmbeddings.message);
@@ -51,21 +44,19 @@ export async function embedExtractedTextAndUpsertToSupabaseDB(
 
   // Insert one row per text chunk with its corresponding vector
   const insertPromises =
-    textEmbeddings.embeddings?.map(
-      (embedding: ContentEmbedding, index: number) => {
-        return supabaseClient.from("vector_store").insert({
-          user_id: userId,
-          file_name: receivedFile.name,
-          file_type: fileType?.ext,
-          file_size: receivedFile.size,
-          file_content: extractedText,
-          content: textChunks[index],
-          vectors: embedding.values,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
-      }
-    ) || [];
+    textEmbeddings.embeddings?.map((embedding: ContentEmbedding, index: number) => {
+      return supabaseClient.from("vector_store").insert({
+        user_id: userId,
+        file_name: receivedFile.name,
+        file_type: fileType?.ext,
+        file_size: receivedFile.size,
+        file_content: extractedText,
+        content: textChunks[index],
+        vectors: embedding.values,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+    }) || [];
 
   const results = await Promise.all(insertPromises);
 
@@ -88,19 +79,14 @@ export async function embedExtractedTextAndUpsertToSupabaseDB(
     return new Error(error.message);
   }
 
-  console.log(
-    "text chunking and embedding done, upserting to Supabase DB is successful",
-    {
-      user_id: "test",
-      content: extractedText,
-      textChunks,
-      textEmbeddings,
-      vectors: textEmbeddings.embeddings
-        ?.values()
-        .map((embedding: ContentEmbedding) => embedding),
-      data: results,
-    }
-  );
+  console.log("text chunking and embedding done, upserting to Supabase DB is successful", {
+    user_id: "test",
+    content: extractedText,
+    textChunks,
+    textEmbeddings,
+    vectors: textEmbeddings.embeddings?.values().map((embedding: ContentEmbedding) => embedding),
+    data: results,
+  });
 
   return {
     success: true,

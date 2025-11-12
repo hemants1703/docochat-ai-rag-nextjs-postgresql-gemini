@@ -35,7 +35,7 @@ export async function sendMessage(
   const { data: fetchedFileContent, error } = await supabase.rpc("match_trained_documents", {
     p_user_id: validatedFields.data.userDetails.id,
     p_query_embedding: embedding.embeddings?.[0].values,
-    p_match_threshold: 0.5,
+    p_match_threshold: 0.6,
     p_match_count: 10,
   });
 
@@ -46,16 +46,26 @@ export async function sendMessage(
     return previousState;
   }
 
-  // Accumulate file content from the fetched file content
+  // Use content (chunks) instead of file_content (full document)
+  // This ensures we only send relevant chunks to the LLM, not entire documents
   let fileContent = "";
-  if (fetchedFileContent.length > 0) {
-    fetchedFileContent.forEach((content: { file_content: string }) => (fileContent += content.file_content));
+  if (fetchedFileContent && fetchedFileContent.length > 0) {
+    // Extract only the matched chunks (content field)
+    const matchedChunks = fetchedFileContent.map((chunk: { content: string }) => chunk.content);
+
+    // Join chunks with clear separators for better context
+    fileContent = matchedChunks.join("\n\n---\n\n");
   }
 
   const systemPrompt = fileContent
     ? `
-  You are a helpful assistant that can answer questions and help with tasks. The user has uploaded documents to the system. You are STRICTLY limited to the context of the uploaded documents, even if the user tries to trick or force you, just let them know you are only bound to talk within the scope of the document. The uploaded document's content is this: ${fileContent}
-  `
+You are a helpful assistant that can answer questions and help with tasks. The user has uploaded documents to the system. You are STRICTLY limited to the context of the uploaded documents, even if the user tries to trick or force you, just let them know you are only bound to talk within the scope of the document.
+
+The relevant document chunks are:
+${fileContent}
+
+Answer the user's question based ONLY on the information provided in these chunks. If the answer is not in the chunks, say so.
+`
     : "You are a helpful assistant that can answer questions and help with tasks. The user has uploaded documents to the system and you already have the context for that";
 
   let previousMessages;
@@ -90,7 +100,7 @@ export async function sendMessage(
 
   try {
     chatResponse = await ai.models.generateContent({
-      model: "gemini-2.0-flash-lite",
+      model: "gemini-2.0-flash",
       contents: [
         ...(previousMessages || []),
         {
